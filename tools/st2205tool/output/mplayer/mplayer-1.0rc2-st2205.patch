@@ -1,0 +1,247 @@
+diff -BNburp MPlayer-1.0rc2-org/configure MPlayer-1.0rc2/configure
+--- MPlayer-1.0rc2-org/configure	2007-10-07 21:49:33.000000000 +0200
++++ MPlayer-1.0rc2/configure	2008-01-14 12:42:36.000000000 +0100
+@@ -4442,6 +4442,9 @@ else
+ fi
+ echores "$_fbdev"
+ 
++_dev_st2205u='#define HAVE_ST2205U 1'
++_vosrc="$_vosrc vo_st2205u.c"
++_vomodules="st2205u $_vomodules"
+ 
+ 
+ echocheck "DVB"
+diff -BNburp MPlayer-1.0rc2-org/libvo/video_out.c MPlayer-1.0rc2/libvo/video_out.c
+--- MPlayer-1.0rc2-org/libvo/video_out.c	2007-10-07 21:49:28.000000000 +0200
++++ MPlayer-1.0rc2/libvo/video_out.c	2008-01-14 02:06:11.000000000 +0100
+@@ -92,6 +92,7 @@ extern vo_functions_t video_out_aa;
+ extern vo_functions_t video_out_caca;
+ extern vo_functions_t video_out_mpegpes;
+ extern vo_functions_t video_out_yuv4mpeg;
++extern vo_functions_t video_out_st2205u;
+ #ifdef HAVE_DIRECTX
+ extern vo_functions_t video_out_directx;
+ #endif
+@@ -149,6 +150,7 @@ extern vo_functions_t video_out_md5sum;
+ 
+ vo_functions_t* video_out_drivers[] =
+ {
++	&video_out_st2205u,
+ #ifdef HAVE_XVR100
+         &video_out_xvr100,
+ #endif
+diff -BNburp MPlayer-1.0rc2-org/libvo/vo_st2205u.c MPlayer-1.0rc2/libvo/vo_st2205u.c
+--- MPlayer-1.0rc2-org/libvo/vo_st2205u.c	1970-01-01 01:00:00.000000000 +0100
++++ MPlayer-1.0rc2/libvo/vo_st2205u.c	2008-01-14 12:34:25.000000000 +0100
+@@ -0,0 +1,211 @@
++/*
++ * Video driver for ST2205U
++ * Copyright 2008 Sprite_tm <picframe@spritesmods.com>
++ * For more info, please visit http://spritesmods.com/?art=picframe
++ */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++
++#include <sys/mman.h>
++#include <sys/ioctl.h>
++#include <linux/fb.h>
++
++#include "config.h"
++#include "video_out.h"
++#include "video_out_internal.h"
++#include "fastmemcpy.h"
++#include "sub.h"
++#include "mp_msg.h"
++
++#include <stdio.h>
++#include <string.h>
++#include <stdint.h>
++#include <unistd.h>
++#include <stdlib.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <asm/fcntl.h>
++#include <gd.h>
++#include <dirent.h>
++#include <sys/mman.h>
++
++
++/*
++Two routines to allocate/deallocate page-aligned memory, for use with the
++O_DIRECT-opened files.
++*/
++
++void *malloc_aligned(long size) {
++    int f;
++    char *buff;
++    f=open("/dev/zero",O_RDONLY);
++    buff=mmap(0,size,PROT_READ|PROT_WRITE,MAP_PRIVATE,f,0);
++    close(f);
++    return buff;
++}
++
++int free_aligned(void *addr, long size) {
++    munmap(addr,size);
++    return 0;
++}
++
++/*
++Checks if the device is a photo frame by reading the first 512 bytes and
++comparing against the known string that's there
++*/
++int is_photoframe(int f) {
++    int y,res;
++    char id[]="SITRONIX CORP.";
++    char *buff;
++    buff=malloc_aligned(0x200);
++    lseek(f,0x0,SEEK_SET);
++    y=read(f,buff,0x200);
++    buff[15]=0;
++//    fprintf(stderr,"ID=%s\n",buff);
++    res=strcmp(buff,id)==0?1:0;
++    free_aligned(buff,0x200);
++    return res;
++}
++
++static vo_info_t info = {
++	"st2205u device",
++	"st2205u",
++	"Jeroen Domburg <picframe@spritesmods.com>",
++	""
++};
++
++LIBVO_EXTERN(st2205u)
++
++
++static char *st_dev_name = NULL; // such as /dev/sda
++static int st_dev_fd; // handle for st_dev_name
++static unsigned char* imagebuff;
++
++
++static int st_preinit(int reset)
++{
++	static int st_preinit_done = 0;
++	static int st_err = -1;
++
++	if (reset) {
++		st_preinit_done = 0;
++		return 0;
++	}
++	
++	if (st_preinit_done)
++		return st_err;
++		
++	st_preinit_done = 1;
++	printf("st2205: preinit\n");
++	if (!st_dev_name)
++		st_dev_name = strdup("/dev/sda");
++
++	mp_msg(MSGT_VO, MSGL_V, "[st2205u] Using device %s\n", st_dev_name);
++
++	if ((st_dev_fd = open(st_dev_name, O_RDWR|O_DIRECT)) == -1) {
++		mp_msg(MSGT_VO, MSGL_ERR, "[st2205u] Can't open %s: %s\n", st_dev_name, strerror(errno));
++		goto err_out;
++	}
++	if (!is_photoframe(st_dev_fd)) {
++		mp_msg(MSGT_VO, MSGL_ERR, "[st2205u] %s: No st2205 device.\n", st_dev_name);
++		goto err_out;
++	}
++	imagebuff=malloc_aligned(128*128*2);
++	st_err = 0;
++	printf("[st2205u] %s opened successfully.\n", st_dev_name);
++	return 0;
++err_out:
++	if (st_dev_fd >= 0) close(st_dev_fd);
++	st_dev_fd = -1;
++	st_err = -1;
++	return -1;
++}
++
++static int preinit(const char *subdevice)
++{
++	if (subdevice)
++	{
++	    if (st_dev_name) free(st_dev_name);
++	    st_dev_name = strdup(subdevice);
++	}
++	return st_preinit(0);
++}
++
++static void draw_osd(void) {
++    return;    
++}
++
++static int config(uint32_t width, uint32_t height, uint32_t d_width,
++		uint32_t d_height, uint32_t flags, char *title,
++		uint32_t format)
++{
++	return 0;
++}
++
++static int query_format(uint32_t format)
++{
++	if (st_preinit(0)) return 0;
++	if ((format & IMGFMT_BGR_MASK) == IMGFMT_BGR) {
++		if ((format & 0xff)==16) return VFCAP_CSP_SUPPORTED|VFCAP_CSP_SUPPORTED_BY_HW|VFCAP_ACCEPT_STRIDE;
++	}
++	return 0;
++}
++
++
++// all csp support stride
++static int draw_frame(uint8_t *src[]) { return 1; }
++
++static int draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
++{
++	uint8_t *in = src[0];
++	uint8_t *dest = imagebuff + (128 * y + x) * 2;
++	int next = 128 * 2;
++	int i,j;
++
++	//make sure we won't cross the boundaries of dest
++	if (x>127) return 0;
++	if (y>127) return 0;
++	if (w+x>127) w=127-x;
++	if (h+x>127) h=127-x;
++
++	for (i = 0; i < h; i++) {
++		//manually do a memcpy because the bytes
++		//should be flipped first :X
++		for (j=0; j<w; j++) {
++		    dest[j*2]=in[j*2+1];
++		    dest[j*2+1]=in[j*2];
++		}
++		dest += next;
++		in += stride[0];
++	}
++	return 0;
++}
++
++static void check_events(void)
++{
++}
++
++static void flip_page(void)
++{
++    //write dest to device
++    lseek(st_dev_fd,0x4200,SEEK_SET);
++    write(st_dev_fd,imagebuff,128*128*2);
++}
++
++static void uninit(void)
++{
++	st_preinit(1); // so that later calls to preinit don't fail
++}
++
++static int control(uint32_t request, void *data, ...)
++{
++  switch (request) {
++  case VOCTRL_QUERY_FORMAT:
++    return query_format(*((uint32_t*)data));
++  }
++  return VO_NOTIMPL;
++}
