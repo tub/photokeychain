@@ -1,0 +1,8 @@
+V implement special control-page registers in the zeropage (using st2205 spec)
+V implement loading of basic rom code from the firmware, makes it easier to find real routines
+V need to implement banking ($35 and such) for memory read/writes
+V add an realtime image-viewer (instead of using the ppm dumper)
+V add more lcd control codes (PCF8833 spec)
+V add a flash peripheral (as a rom?) that can be used to load the memdump files
+* add breakpoint handling
+* perhaps add fake usb handling (via control page and the buffer at $200)

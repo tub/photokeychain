@@ -1,0 +1,21 @@
+copied from a hexdump running on the device, the values for 00-7f are:
+
+7f 7f e4 f0 ff ff f7 ff
+00 ff 1f ff ff 0f 00 f0
+00 00 00 00 00 00 0c fe
+74 79 ff ff ff ff ff ff
+00 00 ff ff 44 af 51 ff
+f8 3f 01 01 78 ff 41 c7
+04 f8 00 f8 00 ff ff ff
+
+f0 12 c0 f0 70 90 00 10
+ff ff ff00 ff f8 ff c3
+ff ff e0 c0 ff ff ff ff
+ff ff 00 00 a8 ff ff 03
+22 85 00 02 ff ff 01 fc
+ff ff ff ff ff ff ff ff
+ff ff ff ff ff 00 00 8c
+d6 bf 06 4e 03 00 00 40
+00 00 00 00 00 00 00 00
+
+

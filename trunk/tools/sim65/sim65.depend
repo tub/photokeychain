@@ -1,0 +1,25 @@
+sim65_instructions.o: sim65_instructions.cpp instructions.h tables.h \
+  AddressPeripheral.h
+disasm.o: disasm.cpp instructions.h tables.h AddressPeripheral.h
+tables.o: tables.cpp instructions.h tables.h
+srecord.o: srecord.cpp srecord.h
+ByteRegister.o: ByteRegister.cpp ByteRegister.h ByteRegisterListener.h
+WordRegister.o: WordRegister.cpp WordRegister.h WordRegisterListener.h
+Memory.o: Memory.cpp Memory.h AddressPeripheral.h MemoryListener.h
+Core65c02.o: Core65c02.cpp Core65c02.h BreakpointManager.h Breakpoint.h \
+  BreakpointListener.h ClockCustomer.h disasm.h instructions.h tables.h \
+  AddressPeripheral.h
+Breakpoint.o: Breakpoint.cpp Breakpoint.h
+BreakpointManager.o: BreakpointManager.cpp BreakpointManager.h \
+  Breakpoint.h BreakpointListener.h
+LCDPeripheral.o: LCDPeripheral.cpp LCDPeripheral.h AddressPeripheral.h
+AddressPeripheral.o: AddressPeripheral.cpp AddressPeripheral.h
+Uart.o: Uart.cpp Uart.h AddressPeripheral.h ClockCustomer.h \
+  UartListener.h UartTypes.h
+Acia6551.o: Acia6551.cpp Acia6551.h Uart.h AddressPeripheral.h \
+  ClockCustomer.h UartListener.h UartTypes.h Acia6551Listener.h
+fotoframe.o: fotoframe.cpp Core65c02.h BreakpointManager.h Breakpoint.h \
+  BreakpointListener.h ClockCustomer.h disasm.h Memory.h \
+  AddressPeripheral.h MemoryListener.h LCDPeripheral.h instructions.h \
+  SDLDisplay.h
+SDLDisplay.o: SDLDisplay.cpp SDLDisplay.h

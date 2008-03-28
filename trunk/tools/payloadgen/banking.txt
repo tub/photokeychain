@@ -1,0 +1,49 @@
+--------
+
+Register pair 0x34/0x35 controls the area at 0x8000 - 0xffff:
+
+0x35 is 0: it points to flash
+0x35 is 1: it points to 0xff (unattached)
+0x35 is 2: it points to 0xff (unattached)
+0x35 is 3: it points to lcd controller
+
+for the case that 0x35 == 0, 0x34 controls which page is mapped:
+
+0x34 == 0: area points to firmware bank at offset 0
+0x34 == 1: area points to firmware bank at offset 0x8000
+
+0x34 == 2: area points to flash image memory bank at offset 0
+0x34 == 3: area points to flash image memory bank at offset 0x8000
+.
+.
+.
+0x34 == X: area points to flash image memory bank at offset (x-2)*0x8000
+
+it wraps around after 0x34 == 0x40, which corresponds to 0x34 == 0
+
+
+-------
+
+Register pair 0x30/0x31 controls the area at 0x4000 - 0x7fff:
+
+0x31 is 0: area points to flash
+0x31 != 0: area points to 0xff (unattached?)
+0x31 is 6: perhaps points to lcd controller, not sure
+
+when 0x31 == 0, 0x32 controls the page mapping:
+
+0x30 == 0 : area points to firmware bank at offset 0
+0x30 == 1 : area points to firmware bank at offset 0x4000
+0x30 == 2 : area points to firmware bank at offset 0x8000
+0x30 == 3 : area points to firmware bank at offset 0xC000
+
+0x30 == 4 : area points to flash image memory bank at offset 0
+0x30 == 5 : area points to flash image memory bank at offset 0x4000
+.
+.
+.
+0x30 == x : area points to flash image memory bank at offset (x-4)*0x4000
+
+
+
+

@@ -1,0 +1,17 @@
+#!/bin/bash -x
+
+#Needed: 
+# - crasm. Is in debian repositories.
+# - dd. Is everywhere :)
+# - objcopy. Prolly comes with your c compiler.
+
+function do_assemble() {
+    rm -f tmp.hex
+    crasm -o tmp.hex $1
+    if [ ! -e tmp.hex ]; then exit 1; fi
+    objcopy -I ihex -O binary tmp.hex $2
+    rm -f tmp.hex
+}
+
+
+do_assemble bootstrap.asm bootstrap.bin

@@ -1,0 +1,8 @@
+import os
+
+e = Environment( ENV = os.environ )
+e.Replace( CXXFLAGS = ["-O3","-Wall"] )
+
+sources = ['ByteRegister.cpp', 'WordRegister.cpp' ,'Memory.cpp', 'Core65c02.cpp', 'Breakpoint.cpp', 'BreakpointManager.cpp', 'LCDPeripheral.cpp', 'ButtonPeripheral.cpp', 'TimerPeripheral.cpp', 'AddressPeripheral.cpp', 'TrapPeripheral.cpp', 'Uart.cpp', 'Acia6551.cpp', 'fotoframe.cpp', 'SDLDisplay.cpp', 'disasm.cpp',  'sim65_instructions.cpp',  'srecord.cpp',  'tables.cpp' , 'BankedMemory.cpp', 'FlashMemory.cpp', 'DMAPeripheral.cpp']
+
+e.Program( "sim65", sources, LIBS=["SDL"] )

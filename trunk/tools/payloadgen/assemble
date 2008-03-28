@@ -1,0 +1,44 @@
+#!/bin/bash 
+
+#Needed: 
+# - crasm. Is in debian repositories, but it has a horrible CPX/CPY error, so we use the one from svn instead [jrk]
+# - dd. Is everywhere :)
+# - objcopy. Prolly comes with your c compiler.
+
+CRASM="`dirname $0`/../crasm/crasm"
+
+function do_assemble() {
+    rm -f tmp.hex
+    $CRASM -l -x -o tmp.hex $1  | grep -vE "^$"
+    if [ ! -e tmp.hex ]; then exit 1; fi
+    objcopy -I ihex  -vv  -O binary tmp.hex $2
+    ls -l $2
+    rm -f tmp.hex
+}
+
+
+do_assemble $1 $2 
+
+echo "------"
+rm -f $2.ram $2.rom
+RAMSIZE=1024 # number of bytes of ram available. for a 0x400 load address this is about 1024
+SIZE=`stat -c %s $2`
+dd if=$2 of=$2.ram bs=1024 count=1
+if test "${SIZE}" -gt "${RAMSIZE}"
+then
+   echo "target file is larger than available RAM, assuming ROM usage: splitting"
+# todo check if last byte of .ram file is 00, if it isn't print a warning
+   dd if=$2 of=$2.rom bs=1 skip=$[0x4000-RAMSIZE]
+else
+   echo "no rom used, everything fits in ram"
+fi
+
+# check for data pages in the main program (third argument) (which are loaded into rom as well)
+if grep  -q "DATAPAGE" $3
+then
+   echo "processing datapage directives."
+   grep "DATAPAGE" $3 | awk -v ofile=$2.rom '($1=="DATAPAGE") {offset=($2+1)*32768; ret=system( "dd if=\""$3"\" of=\""ofile"\" bs=1 seek="offset ); print "added "$3" at page "$2; if (ret) { exit ret; }}' || exit 1
+else
+   echo "no datapage directives found :)"
+fi
+echo "------"

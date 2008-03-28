@@ -1,0 +1,9 @@
+import os
+
+e = Environment( ENV = os.environ )
+e.Replace( CXXFLAGS = ["-O3","-Wall"] )
+e.Replace( CFLAGS = ["-O3","-Wall"] )
+
+sources = ['xref.c', 'filter.c', 'macro.c', 'scode.c', 'cpuz80.c', 'stdvocabulary.c', 'parse.c', 'cpulist.c', 'cpu6800.c', 'cpu6502.c', 'label.c', 'operator.c', 'output.c', 'crasm.c', 'pseudos.c']
+
+e.Program( "crasm", sources )
