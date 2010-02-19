@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 
 int main(int argc, char **argv) {
     int f1,f2,r,size,size2,x,y;
