@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 
 
@@ -31,7 +32,7 @@ int main(int argc, char **argv) {
     struct stat sbuff;
     
     if (argc!=4) {
-	printf("Usage: %s file1 file2 offset\nOverwrites the byte in file1 with those of file2, starting at offset.\n");
+	printf("Usage: %s file1 file2 offset\nOverwrites the byte in file1 with those of file2, starting at offset.\n", argv[0]);
 	exit(0);
     }
     

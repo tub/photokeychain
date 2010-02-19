@@ -43,7 +43,7 @@ void *malloc_aligned(long size) {
     return buff;
 }
 
-int free_aligned(void *addr, long size) {
+void free_aligned(void *addr, long size) {
     munmap(addr,size);
 }
 
@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
     unsigned char *buff;
 
     if (argc<2) {
-	printf("Usage:\n%s [-d|-u|-df|-uf|-m|-l] file [device]\n");
+	printf("Usage:\n%s [-d|-u|-df|-uf|-m|-l] file [device]\n", argv[0]);
 	printf(" -d: dump mem\n");
 	printf(" -u: upload mem\n");
 	printf(" -df: dump firmware\n");
@@ -272,7 +272,7 @@ int main(int argc, char** argv) {
 	    fprintf(stderr,".");
 	}
 	fprintf(stderr,"\n");
-	printf("Dump: %i paged dumped.\n");
+	printf("Dump: %u pages dumped.\n", x);
     } else if (mode==M_FDMP) {
 	//Use a trick to get the 64K of firmware: if we request the data starting
 	//at (2M-64K), the data gets read from a mirror of the flash, position 0.

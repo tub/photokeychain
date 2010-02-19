@@ -1,6 +1,7 @@
 SRC	=	main.c
 OBJ	=	main.o
 LIBS	=	-lgd	
+CFLAGS = -W
 
 all:	phack splice bgrep
 
