@@ -1,0 +1,1 @@
+The photoframe project contains everything you need to start developing custom applications on the tomtec photo keychains.
